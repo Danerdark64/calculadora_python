@@ -19,7 +19,7 @@ def binario_a_entero(binario):
     return int(binario, 2)  # Convierte la cadena binaria a entero usando base 2
 
 # Función para convertir un número decimal (entero y fraccionario) a binario
-def decimal_a_binario(numero, precision=4):
+def decimal_a_binario(numero, precision=12):
     parte_entera = int(numero)  # Separa la parte entera
     bin_entero = entero_a_binario(parte_entera)  # Convierte la parte entera a binario
     
@@ -52,20 +52,25 @@ def binario_a_decimal(binario):
     return decimal  # Retorna el valor decimal total
 
 # Función para sumar dos números en complemento a 2
-def suma_binaria_comp2(num1, num2):
-    return entero_a_binario(num1 + num2)  # Convierte la suma a binario
+def suma_binaria_comp2(bin1, bin2):
+    entero1 = int(bin1, 2)
+    entero2 = int(bin2, 2)
+    suma = entero1 + entero2
+    return bin(suma)[2:]  # Retorna la suma en binario sin el '0b'
 
 # Función para restar dos números en complemento a 2
-def resta_binaria_comp2(num1, num2):
-    resta = num1 - num2  # Realiza la resta
+def resta_binaria_comp2(bin1, bin2):
+    num1 = int(bin1, 2)  # Convierte bin1 de binario a entero
+    num2 = int(bin2, 2)  # Convierte bin2 de binario a entero
+    resta = num1 - num2
+
     if resta >= 0:
-        return entero_a_binario(resta)  # Si la resta es positiva, convierte a binario
+        return bin(resta)[2:]  # Si es positivo, devuelve el binario sin el prefijo '0b'
     else:
-        # Para números negativos, se obtiene el complemento a 1
-        complemento1 = ''.join(['1' if bit == '0' else '0' for bit in entero_a_binario(abs(resta))])
-        # Luego se suma 1 para obtener el complemento a 2
-        complemento2 = bin(int(complemento1, 2) + 1)[2:]
-        return complemento2  # Retorna el complemento a 2
+        # Si el resultado es negativo, calcular complemento a 2
+        bits = max(len(bin1), len(bin2)) + 1  # Para asegurar espacio suficiente
+        complemento2 = (1 << bits) + resta
+        return bin(complemento2)[2:]
 
 # Clase para la interfaz gráfica de la calculadora
 class CalculadoraBinariaApp:
@@ -146,18 +151,15 @@ class CalculadoraBinariaApp:
                 res = binario_a_decimal(val1)  # Convierte el binario a decimal
                 self.mostrar_resultado(f"Binario: {val1}\nDecimal: {res}")
                 
-            elif op in ["Suma Binaria (C2)", "Resta Binaria (C2)"]:
-                val2 = self.entrada2.get()  # Obtiene el segundo valor
-                # Convierte los valores según la operación
-                num1 = int(val1) if op == "Suma Binaria (C2)" else binario_a_entero(val1)
-                num2 = int(val2) if op == "Suma Binaria (C2)" else binario_a_entero(val2)
-                
-                if op == "Suma Binaria (C2)":
-                    res = suma_binaria_comp2(num1, num2)  # Realiza la suma
-                    self.mostrar_resultado(f"{entero_a_binario(num1)} + {entero_a_binario(num2)} = {res}")
-                else:
-                    res = resta_binaria_comp2(num1, num2)  # Realiza la resta
-                    self.mostrar_resultado(f"{entero_a_binario(num1)} - {entero_a_binario(num2)} = {res}")
+            elif op == "Suma Binaria (C2)":
+                val2 = self.entrada2.get()  # Obtiene el segundo valor como binario
+                res = suma_binaria_comp2(val1, val2)  # Realiza la suma correcta
+                self.mostrar_resultado(f"{val1} + {val2} = {res}")
+            else:
+               val2 = self.entrada2.get()  # Obtiene el segundo valor
+               res = resta_binaria_comp2(val1, val2)  # Realiza la resta correcta
+               self.mostrar_resultado(f"{val1} - {val2} = {res}")
+
         
         except ValueError as e:
             messagebox.showerror("Error", f"Dato inválido: {e}")  # Muestra un mensaje de error si hay un problema con la entrada
